@@ -1,70 +1,62 @@
-﻿class MonteCarlo
+﻿using System.Diagnostics;
+
+class MonteCarlo
 {
-    private int A;
-    private int B;
-    private int count;
-    private readonly Random  rnd = new ();
-    
-    public  MonteCarlo(int a, int b)
+    private readonly int _a;
+    private readonly int _b;
+    private readonly Random _rnd = new();
+
+    public MonteCarlo(int a, int b)
     {
-        A = a;
-        B = b;
-        count = 10000;
+        _a = a;
+        _b = b;
     }
-    
-    private double F(double x)
+
+    private static double F(double x)
     {
         return Math.Pow(x, 3);
     }
 
-    private double[][] GetCoords()
+    private void GeneratePoints(out  int hits, out int misses)
     {
-        double [][] coords = new double[count][];
-        for (int i = 0; i < count; i++)
-        {
-            coords[i] =
-            [
-                A + rnd.NextDouble() * (B - A),
-                rnd.NextDouble() * F(B)
-            ];
-        }
-        return coords;
-    }
-
-    public double[] Shots()
-    {
-        double [] shots = new double[2];
-        double[][] coords = GetCoords();
-        for (int i = 0; i < count; i++)
+        var duration = TimeSpan.FromSeconds(3);
+        var stopwatch = Stopwatch.StartNew();
+        
+        hits = 0;
+        misses = 0;
+        
+        while (stopwatch.Elapsed < duration)
+        { 
+            double x = _a + _rnd.NextDouble() * (_b - _a);
+            double y = _rnd.NextDouble() * F(_b);
             
-        {
-            // shots[0] = mimo
-            if (F(coords[i][0]) < coords[i][1])
+            if (F(x) > y)
             {
-                shots[0]++;
+                hits++;
             }
-            // shots[1] = trefa
             else
             {
-                shots[1]++;
+                misses++;
             }
         }
-        return shots;
     }
 
-    public double Sintegral()
+    public double Integrate()
     {
-        double[] shots = Shots();
-        return shots[1] / (shots[0] + shots[1]) * F(B) * (B - A);
+        GeneratePoints(out int  hits, out int misses);
+        double hitRatio = hits / ((double)misses + hits);
+        double squareArea = (_b - _a) * F(_b);
+        return hitRatio * squareArea;
+
     }
 }
+
+
 class Program
 {
-    static void Main()
+    private static void Main()
     {
-        MonteCarlo integral = new MonteCarlo(1,4);
-        Console.WriteLine(integral.Sintegral()); 
-        
-
+        MonteCarlo integral = new MonteCarlo(4,5);
+        Console.WriteLine(integral.Integrate());
     }
 }
